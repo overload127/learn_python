@@ -11,6 +11,7 @@ def main():
         print("[{0}] = [{1}]".format(column,c))
 
 def list_find1(lst, target):
+    """тестовое описание функции"""
     for index, x in enumerate(lst):
         if x == target:
             break

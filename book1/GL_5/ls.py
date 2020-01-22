@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# "C:\\Users\\kostya\\py3eg\\learn_python\\book1\\GL_5"
+# -smrH -o size "C:\\Users\\kostya\\py3eg\\learn_python\\book1\\GL_5"
 # Программа работает как dir из винды или ls из линукса.
 # Есть косяк) при сортировке по имени с рекурсией учитывает буквы пути к файлу.
 # Решение - сделать доп-поле в словаре для путя, и производить склеивание строк перед самым выводом.
@@ -13,21 +13,7 @@ import locale
 SORT_BY_NAME, SORT_BY_MODIFIED, SORT_BY_SIZE = 1, 2, 3
 
 def main():
-    parser = optparse.OptionParser(usage="Usage: %prog [options] [path1 [path2 [... pathN]]]")
-    parser.description = "The paths are optional; if not given . is used."
-    parser.add_option(  "-H", "--hidden", action="store_true", dest="hidden",
-                        help=("show hidden files [default: %default]"))
-    parser.add_option(  "-m", "--modified", action="store_true", dest="modified",
-                        help=("show last modified date/time [default: %default]"))
-    parser.add_option(  "-o", "--order", action="store", type="choice", dest="order",
-                        choices=["name", "n", "modified", "m", "size", "s"],
-                        help=("order by ('name', 'n', 'modified', 'm', 'size', 's') [default: %default]"))
-    parser.add_option(  "-r", "--recursive", action="store_true", dest="recursive",
-                        help=("recurse into subdirectories [default: %default]"))
-    parser.add_option(  "-s", "--sizes", action="store_true", dest="sizes",
-                        help=("show sizes [default: %default]"))
-    parser.set_defaults(hidden=False, modified=False, order="name", recursive=False, sizes=False)
-    opts, args = parser.parse_args()
+    opts, args = init_optparse()
     if args:
         path_dirs = [line.replace("\\", "/") for line in args]
     else:
@@ -78,6 +64,38 @@ def main():
                 print(print_line)
 
         print("{0} files, {1} directory".format(count_files, count_dir))
+
+def init_optparse():
+    """Функция читает параметры запуска программы и возвращает их.
+
+        Входные параметры:
+            -нет
+        Возвращает:
+            Кортеж из двух списков
+
+            Первый список - это набор параметров, которые
+            читает и обрабатывает функция.
+
+            Второй список - это список из строк,
+            хранящие параметры, несовпадающие
+            ни с одним предопределённым для данной программы.
+    """
+
+    parser = optparse.OptionParser(usage="Usage: %prog [options] [path1 [path2 [... pathN]]]")
+    parser.description = "The paths are optional; if not given . is used."
+    parser.add_option(  "-H", "--hidden", action="store_true", dest="hidden",
+                        help=("show hidden files [default: %default]"))
+    parser.add_option(  "-m", "--modified", action="store_true", dest="modified",
+                        help=("show last modified date/time [default: %default]"))
+    parser.add_option(  "-o", "--order", action="store", type="choice", dest="order",
+                        choices=["name", "n", "modified", "m", "size", "s"],
+                        help=("order by ('name', 'n', 'modified', 'm', 'size', 's') [default: %default]"))
+    parser.add_option(  "-r", "--recursive", action="store_true", dest="recursive",
+                        help=("recurse into subdirectories [default: %default]"))
+    parser.add_option(  "-s", "--sizes", action="store_true", dest="sizes",
+                        help=("show sizes [default: %default]"))
+    parser.set_defaults(hidden=False, modified=False, order="name", recursive=False, sizes=False)
+    return parser.parse_args()
     
 def from_walk(data_files, path_dir, hidden=False):
     count_files, count_dir = 0, 0
