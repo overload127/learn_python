@@ -10,16 +10,13 @@ import os
 import time
 import locale
 
-SORT_BY_NAME, SORT_BY_MODIFIED, SORT_BY_SIZE = 1, 2, 3
+SIZE, FILE_NAME, MODIFIED = 0, 1, 2
 
 def main():
     opts, args = init_optparse()
-    if args:
-        path_dirs = [line.replace("\\", "/") for line in args]
-    else:
-        path_dirs = ["."]
+    path_dirs = [line.replace("\\", "/") for line in args]
 
-    locale.setlocale(locale.LC_ALL, '')
+    locale.setlocale(locale.LC_ALL, "")
 
     for path_dir in path_dirs:
         data_files = collections.defaultdict(list)
@@ -29,40 +26,44 @@ def main():
         else:
             count_files, count_dir = from_listdir(data_files, path_dir, opts.hidden)
 
-        files_list = []
-        for line in data_files.values():
-            files_list.extend(line)
-
         if      opts.order in ("name", "n"):
-            sort_fun = lambda flag: flag[1].lower()
+            #sort_fun = lambda flag: flag[FILE_NAME].lower() if flag[FILE_NAME].rfind("/") == -1 else flag[FILE_NAME][flag[FILE_NAME].rfind("/")+1:].lower()
+            sort_fun = lambda flag: flag[FILE_NAME][flag[FILE_NAME].rfind("/")+1:]
         elif    opts.order in ("modified", "m"):
-            sort_fun = lambda flag: flag[2]
+            sort_fun = lambda flag: flag[MODIFIED]
         elif    opts.order in ("size", "s"):
-            sort_fun = lambda flag: flag[0]
+            sort_fun = lambda flag: flag[SIZE]
         else:
             print("Случилось невозможное. Это связано с выбором сортировки")
             exit(2)
-        files_list
 
-        for line in sorted(files_list, key=sort_fun):
-            print_line = ""
-            if opts.modified:
-                print_line = "{0:20} ".format(time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime(line[2])))
-            if opts.sizes:
-                print_line = "".join((print_line, "{0:10n} ".format(line[0])))
-            print_line = "".join((print_line, "{0:<}".format(line[1])))     
-            print(print_line)
-
-        for key in sorted(data_files):
-            if key != path_dir:
+        line_file = []
+        line_folder = []
+        for key_word in sorted(data_files):
+            for line in sorted(data_files[key_word], key=sort_fun):
+                print_line = ""
+                if opts.modified:
+                    print_line = "{0:20} ".format(time.strftime(
+                        '%Y-%m-%d %H:%M:%S',time.gmtime(line[MODIFIED])))
+                if opts.sizes:
+                    print_line = "".join((print_line, "{0:10n} ".format(line[SIZE]) ))
+                print_line = "".join((print_line, "{0:<}".format(line[FILE_NAME]) ))
+                line_file.append(print_line)
+            
+            if key_word != path_dir:
                 print_line = ""
                 if opts.modified:
                     print_line = "{0:20} ".format("")
                 if opts.sizes:
-                    print_line = "".join((print_line, "{0:10} ".format("")))
-                print_line = "".join((print_line, "{0:<}".format(key)))
-                print(print_line)
+                    print_line = "".join((print_line, "{0:10} ".format("") ))
+                print_line = "".join((print_line, "{0:<}".format(key_word) ))
+                line_folder .append(print_line)
 
+        for line in line_file:
+            print(line)
+        for line in line_folder:
+            print(line)
+        
         print("{0} files, {1} directory".format(count_files, count_dir))
 
 def init_optparse():
@@ -94,9 +95,15 @@ def init_optparse():
                         help=("recurse into subdirectories [default: %default]"))
     parser.add_option(  "-s", "--sizes", action="store_true", dest="sizes",
                         help=("show sizes [default: %default]"))
-    parser.set_defaults(hidden=False, modified=False, order="name", recursive=False, sizes=False)
-    return parser.parse_args()
+    parser.set_defaults(hidden=False, modified=False, order="name",
+                        recursive=False, sizes=False)
+    opts, args = parser.parse_args()
     
+    if not args:
+        args = ["."]
+    return opts, args
+
+
 def from_walk(data_files, path_dir, hidden=False):
     count_files, count_dir = 0, 0
     for root, dirs, files in os.walk(path_dir):
@@ -133,5 +140,6 @@ def from_listdir(data_files, path_dir, hidden=False):
                 pass
     
     return (count_files, count_dir)
+
 
 main()
